@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.*;
 
 /**
  * This is the provided NumberTriangle class to be used in this coding task.
@@ -42,7 +43,6 @@ public class NumberTriangle {
         this.left = left;
     }
 
-
     public void setRight(NumberTriangle right) {
         this.right = right;
     }
@@ -50,7 +50,6 @@ public class NumberTriangle {
     public int getRoot() {
         return root;
     }
-
 
     /**
      * [not for credit]
@@ -66,11 +65,9 @@ public class NumberTriangle {
         // for fun [not for credit]:
     }
 
-
     public boolean isLeaf() {
         return right == null && left == null;
     }
-
 
     /**
      * Follow path through this NumberTriangle structure ('l' = left; 'r' = right) and
@@ -90,9 +87,11 @@ public class NumberTriangle {
     public int retrieve(String path) {
         NumberTriangle current = this;
         for (char c : path.toCharArray()) {
+            if (current == null) throw new NullPointerException("Invalid path: " + path);
             if (c == 'l') current = current.left;
             else if (c == 'r') current = current.right;
         }
+        if (current == null) throw new NullPointerException("Path leads to null node: " + path);
         return current.root;
     }
 
@@ -111,10 +110,14 @@ public class NumberTriangle {
         // open the file and get a BufferedReader object whose methods
         // are more convenient to work with when reading the file contents.
         InputStream inputStream = NumberTriangle.class.getClassLoader().getResourceAsStream(fname);
+        if (inputStream == null) {
+            // fallback if file is not in resources
+            inputStream = new FileInputStream(fname);
+        }
         BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
 
-
         // TODO define any variables that you want to use to store things
+        List<List<NumberTriangle>> levels = new ArrayList<>();
 
         // will need to return the top of the NumberTriangle,
         // so might want a variable for that.
@@ -127,11 +130,29 @@ public class NumberTriangle {
             System.out.println(line);
 
             // TODO process the line
+            if (!line.trim().isEmpty()) {
+                String[] tokens = line.trim().split("\\s+");
+                List<NumberTriangle> current = new ArrayList<>();
+                for (String t : tokens) current.add(new NumberTriangle(Integer.parseInt(t)));
+                levels.add(current);
+            }
 
             //read the next line
             line = br.readLine();
         }
         br.close();
+
+        for (int i = 0; i < levels.size() - 1; i++) {
+            List<NumberTriangle> upper = levels.get(i);
+            List<NumberTriangle> lower = levels.get(i + 1);
+            for (int j = 0; j < upper.size(); j++) {
+                NumberTriangle node = upper.get(j);
+                node.setLeft(lower.get(j));
+                node.setRight(lower.get(j + 1));
+            }
+        }
+
+        if (!levels.isEmpty()) top = levels.get(0).get(0);
         return top;
     }
 
